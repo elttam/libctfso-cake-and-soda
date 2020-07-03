@@ -1,0 +1,78 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <sys/ptrace.h>
+
+#define CHALLENGE_NAME "Olympic Dam"
+#define FLAG "{{ flag_path }}"
+#define KEY "\x06\x02\x59\x03\x05\x0a\x0f\x45\x25\x13\x4d\x38\x0d\x0b\x41\x50\x08\x0f\x4c\x64\x11\x08\x20\x1c\x15\x08\x50\x08\x11\x45\x64\x02\x1f\x2a\x01\x18\x19\x15\x0d\x43\x45\x35\x14\x0c\x23\x42"
+
+/* Anti-debugging trick / bit of a troll */
+__attribute__((constructor)) void _stop(void) {
+        if (ptrace(PTRACE_TRACEME, 0, 0, 0) < 0)
+                exit(0);
+}
+
+/* Prints the theme MOTD */
+void motd() {
+        printf("\n");
+        printf("                             ____\n");
+        printf("                     __,-~~/~    `---.\n");
+        printf("                   _/_,---(      ,    )\n");
+        printf("               __ /        <    /   )  \\___\n");
+        printf("- ------===;;;'====------------------===;;;===----- -%s-\n", CHALLENGE_NAME);
+        printf("                  \\/  ~\"~\"~\"~\"~\"~\\~\"~)~\"/\n");
+        printf("                  (_ (   \\  (     >    \\)\n");
+        printf("                   \\_( _ <         >_>'\n");
+        printf("                      ~ `-i' ::>|--\"\n");
+        printf("                          I;|.|.|\n");
+        printf("                         <|i::|i|`.\n");
+        printf("                        (` ^'\"`-' \")\n");
+        printf("\n");
+}
+
+
+/* Checks the user input against the stored key */
+bool check_key(const char *k) {
+        size_t kl = sizeof(KEY)-1;
+        size_t nl = sizeof(CHALLENGE_NAME)-1;
+        for(int i = 0; i < kl; i++) {
+                int n = i % nl;
+                if((k[i] ^ CHALLENGE_NAME[n]) != KEY[i]) {
+                        return false;
+                }
+        }
+        return true;
+}
+        
+/* Read and print the flag file */
+void read_flag() {
+        int c;
+        FILE *file;
+        file = fopen(FLAG, "r");
+        if (file) {
+                while ((c = getc(file)) != EOF)
+                        putchar(c);
+                fclose(file);
+        } else {
+                printf("Bummer, error opening flag file!\n");
+        }
+}
+
+/* MAIN */
+int main(int argc, char *argv[]) {
+        motd();
+
+        if(argc < 2) {
+                printf("Usage: %s <key>\n", argv[0]);
+                return 0;
+        }
+
+        if(check_key(argv[1])) {
+                read_flag();
+        } else {
+                printf("Invalid key!\n");
+        }
+        return 0;
+}

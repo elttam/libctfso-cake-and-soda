@@ -1,0 +1,75 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+#define CHALLENGE_NAME "McArthur River"
+#define FLAG "{{ flag_path }}"
+
+#define KEY_PREFIX "atomic-"
+
+/* Prints the theme MOTD */
+void motd() {
+        printf("\n");
+        printf("                             ____\n");
+        printf("                     __,-~~/~    `---.\n");
+        printf("                   _/_,---(      ,    )\n");
+        printf("               __ /        <    /   )  \\___\n");
+        printf("- ------===;;;'====------------------===;;;===----- -%s-\n", CHALLENGE_NAME);
+        printf("                  \\/  ~\"~\"~\"~\"~\"~\\~\"~)~\"/\n");
+        printf("                  (_ (   \\  (     >    \\)\n");
+        printf("                   \\_( _ <         >_>'\n");
+        printf("                      ~ `-i' ::>|--\"\n");
+        printf("                          I;|.|.|\n");
+        printf("                         <|i::|i|`.\n");
+        printf("                        (` ^'\"`-' \")\n");
+        printf("\n");
+}
+
+
+/* Checks the user input against the stored key */
+bool check_key(const char *k) {
+        // This challenge checks the key is len 31 and prefixed with the KEY_PREFIX
+        int l = strlen(k);
+        if((l != 31) || (strncmp(k, KEY_PREFIX, strlen(KEY_PREFIX)) != 0))
+                return false;
+
+        // Then checks the remaining chars add to 2400
+        int n = 0;
+        for(int i = 7; i < l; i++) {
+                n += k[i];
+        }
+        return(n == 2600 ? true: false);
+}
+
+/* Read and print the flag file */
+void read_flag() {
+        int c;
+        FILE *file;
+        file = fopen(FLAG, "r");
+        if (file) {
+                while ((c = getc(file)) != EOF)
+                        putchar(c);
+                fclose(file);
+        } else {
+                printf("Bummer, error opening flag file!\n");
+        }
+}
+
+
+/* MAIN */
+int main(int argc, char *argv[]) {
+        motd();
+
+        if(argc < 2) {
+                printf("Usage: %s <key>\n", argv[0]);
+                return 0;
+        }
+
+        if(check_key(argv[1])) {
+                read_flag();
+        } else {
+                printf("Invalid key!\n");
+        }
+        return 0;
+}

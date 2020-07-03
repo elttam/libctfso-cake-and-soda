@@ -1,0 +1,11 @@
+[Unit]
+Description=dr-pepper
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/ncat -nvlkp 8002 -m1000 -c {{ challenge_root }}/{{ challenge_name }}.py
+User={{ flag_user }}
+
+[Install]
+WantedBy=multi-user.target

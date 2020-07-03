@@ -1,0 +1,101 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdbool.h>
+#include <sys/ptrace.h>
+#include <time.h>
+
+#define CHALLENGE_NAME "Arlit"
+#define FLAG "{{ flag_path }}"
+
+/* Default constructor */
+__attribute__((constructor)) void _stop(void) {
+        //anti-debugging trick / bit of a troll
+        if (ptrace(PTRACE_TRACEME, 0, 0, 0) < 0)
+                exit(0);
+        //sleep to hinder bruteforcing
+        sleep(1);
+}
+
+/* Prints the theme MOTD */
+void motd() {
+        printf("\n");
+        printf("                             ____\n");
+        printf("                     __,-~~/~    `---.\n");
+        printf("                   _/_,---(      ,    )\n");
+        printf("               __ /        <    /   )  \\___\n");
+        printf("- ------===;;;'====------------------===;;;===----- -%s-\n", CHALLENGE_NAME);
+        printf("                  \\/  ~\"~\"~\"~\"~\"~\\~\"~)~\"/\n");
+        printf("                  (_ (   \\  (     >    \\)\n");
+        printf("                   \\_( _ <         >_>'\n");
+        printf("                      ~ `-i' ::>|--\"\n");
+        printf("                          I;|.|.|\n");
+        printf("                         <|i::|i|`.\n");
+        printf("                        (` ^'\"`-' \")\n");
+        printf("\n");
+}
+
+/* Get a random number given n iterations */
+uint32_t get_num(uint32_t n) {
+        n %= 1000;
+        for(uint32_t i = 0; i < n; i++) {
+                rand();
+        }
+        return(rand() % 100000);
+}
+
+/* Generate the key to compare */
+uint8_t *get_key(uint32_t seed) {
+        srand(seed);
+        uint32_t r1 = get_num(seed);
+        uint32_t r2 = get_num(r1);
+        uint32_t r3 = get_num(r2 + r1);
+        uint32_t r4 = get_num(r3 + r2 - r1);
+        uint32_t r5 = get_num(r4 + r3 - r2 + r1);
+        static uint8_t key[32] = {0};
+        snprintf(key, 30, "%05d-%05d-%05d-%05d-%05d", r5, r1, r4, r2, r3);
+        return key;
+}
+
+/* Checks the user input against the generated key */
+bool check_key(const char *k) {
+        //printf("time: %d\n", time(0));
+        uint8_t *key_ptr = get_key(time(0));
+        //printf("key: %s\n", key_ptr);
+        if(memcmp(key_ptr, k, 30) == 0)
+                return true;
+        return false;
+}
+        
+/* Read and print the flag file */
+void read_flag() {
+        int c;
+        FILE *file;
+        file = fopen(FLAG, "r");
+        if (file) {
+                while ((c = getc(file)) != EOF)
+                        putchar(c);
+                fclose(file);
+        } else {
+                printf("Bummer, error opening flag file!\n");
+        }
+}
+
+/* MAIN */
+int main(int argc, char *argv[]) {
+        motd();
+
+        if(argc < 2) {
+                printf("Usage: %s <key>\n", argv[0]);
+                return 0;
+        }
+
+        if(check_key(argv[1])) {
+                read_flag();
+        } else {
+                printf("Invalid key!\n");
+        }
+        return 0;
+}
